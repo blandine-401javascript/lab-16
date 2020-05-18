@@ -106,4 +106,9 @@
 * Units test: 'npm test'
 
 
+
 - How do you run app?
+  -  open 3 console:
+    - nodemon server.js
+    - nodemon vendor.js
+    - nodemon driver .js

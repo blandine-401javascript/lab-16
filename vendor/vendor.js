@@ -1,30 +1,46 @@
 'use strict';
 
-const net = require('net');
+const io = require('socket.io-client');
 const faker = require('faker');
-const socket = new net.Socket();
+const flowerSocket = io.connect('http://localhost:3000/csps');
 
-socket.connect({ port: 3000, host: 'localhost' }, () => {
-    console.log('connected to server');
+const candySocket = io.connect('http://localhost:3000/csps');
+
+flowerSocket.emit('join', 'flower-shop');
+candySocket.emit('join', 'candy-shop');
+
+flowerSocket.on('delivered', (payload) => {
+  console.log('Flower: Thank you for delivering', payload.orderId);
 });
 
-socket.on('data', (payload) => {
-    let parsed = JSON.parse(payload.toString());
-   
-
-    if (parsed.event === 'delivered') {
-        console.log('Thank you for delivering order', parsed.order.id);
-    }
+candySocket.on('delivered', (payload) => {
+  console.log('Candy: Thank you for delivering', payload.orderId);
 });
 
+// flower shop
 setInterval(() => {
+  let order = {
+    time: faker.date.recent(),
+    store: 'flower-shop',
+    orderId: faker.random.uuid(),
+    customer: faker.name.firstName() + ' ' + faker.name.lastName(),
+    address: faker.address.streetAddress(),
+  };
+
+  flowerSocket.emit('pickup', order);
+}, 5000);
+
+// candy shop
+setTimeout(() => {
+  setInterval(() => {
     let order = {
-        store: faker.company.companyName(),
-        id: faker.random.uuid(),
-        name: faker.name.firstName() + ' ' + faker.name.lastName(),
-        address: faker.address.streetAddress(),
+        time: faker.date.recent(),
+      store: 'candy-shop',
+      orderId: faker.random.uuid(),
+      customer: faker.name.firstName() + ' ' + faker.name.lastName(),
+      address: faker.address.streetAddress(),
     };
 
-    
-    socket.write(JSON.stringify({ event: 'pickup', order: order }));
-}, 5000);
+    candySocket.emit('pickup', order);
+  }, 5000);
+}, 3000);

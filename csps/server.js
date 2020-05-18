@@ -1,44 +1,26 @@
 'use strict';
+const io = require('socket.io')(3000);
 
-const net = require('net');
-const server = net.createServer();
 
-server.listen(3000, () => {
-  console.log('Never Give Up on 3000');
+
+const cspsIO = io.of('/csps');
+
+cspsIO.on('connection', (socket) => {
+  console.log('csps connected to', socket.id);
+
+
+  socket.on('join', (payload) => {
+    socket.join(payload);
+  });
+
+  socket.on('pickup', (payload) => {
+    console.log(payload);
+
+    cspsIO.to('driver').emit('pickup', payload);
+  });
+
+  socket.on('delivered', (payload) => {
+    cspsIO.to(payload.store).emit('delivered', payload);
+  });
 });
 
-
-
-let socketPool = [];
-
-
-const logger = (payload) => {
-  let parsed = JSON.parse(payload.toString());
-
-
-  for (let i = 0; i < socketPool.length; i++) {
-    let socket = socketPool[i];
-    socket.write(payload);
-  }
-
-  if (parsed.event === 'pickup') {
-    console.log('pickup');
-    console.log('- Time:', new Date());
-    console.log('- Store:', parsed.order.store);
-    console.log('- OrderID:', parsed.order.id);
-    console.log('- Customer:', parsed.order.name);
-    console.log('- Address:', parsed.order.address);
-  }
-
-  if (parsed.event === 'in-transit')
-    console.log('in-transit order', parsed.order.id);
-
-  if (parsed.event === 'delivered')
-    console.log('delivered order', parsed.order.id);
-};
-
-server.on('connection', (socket) => {
-  console.log('socket connected to me');
-  socketPool.push(socket);
-  socket.on('data', logger);
-});
