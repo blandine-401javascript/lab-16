@@ -93,7 +93,8 @@
 
 - Application should generate random orders every 5 seconds, with store, id, customer, and address as the order data.
 
-- [submission PR]()
+
+- [submission PR](https://github.com/blandine-401javascript/lab-16/pull/3)
 
 
 ### Setup
